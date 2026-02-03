@@ -59,9 +59,18 @@ const playerInfo = new promClient.Gauge({
 // Store last successful query result
 let lastQueryResult = null;
 let lastQueryError = null;
+let lastQueryTime = 0;
+let isQuerying = false;
+const QUERY_CACHE_TTL = 5000; // 5 seconds cache to prevent duplicate queries
 
 // Function to query game server
 async function queryGameServer() {
+  if (isQuerying) {
+    // Another query is already in progress, wait for it
+    return;
+  }
+  
+  isQuerying = true;
   const startTime = Date.now();
   
   try {
@@ -122,6 +131,8 @@ async function queryGameServer() {
     queryDuration.set(duration);
     
     lastQueryError = error.message;
+  } finally {
+    isQuerying = false;
   }
 }
 
@@ -129,7 +140,12 @@ async function queryGameServer() {
 app.get('/metrics', async (req, res) => {
   try {
     // Query the game server on-demand when metrics are requested
-    await queryGameServer();
+    // Use cached result if query was done recently (within TTL)
+    const now = Date.now();
+    if (now - lastQueryTime > QUERY_CACHE_TTL) {
+      await queryGameServer();
+      lastQueryTime = now;
+    }
     
     res.set('Content-Type', register.contentType);
     res.end(await register.metrics());
