@@ -1,8 +1,5 @@
 FROM node:lts-alpine
 
-# Create app user
-RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
-
 # Set working directory
 WORKDIR /app
 
@@ -17,10 +14,10 @@ RUN npm ci --only=production && \
 COPY index.js ./
 
 # Change ownership to app user
-RUN chown -R nodejs:nodejs /app
+RUN chown -R node:node /app
 
 # Switch to non-root user
-USER nodejs
+USER node
 
 # Expose the metrics port
 EXPOSE 9090

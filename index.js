@@ -69,31 +69,29 @@ async function queryGameServer() {
     // Another query is already in progress, wait for it
     return;
   }
-  
+
   isQuerying = true;
   const startTime = Date.now();
-  
+
   try {
-    console.log(`Querying ${GAME_TYPE} server at ${GAME_HOST}:${GAME_PORT}...`);
-    
     const result = await GameDig.query({
       type: GAME_TYPE,
       host: GAME_HOST,
       port: GAME_PORT
     });
-    
+
     const duration = (Date.now() - startTime) / 1000;
-    
+
     // Update metrics
     serverOnline.set(1);
     queryDuration.set(duration);
-    
+
     // Player counts
     const currentPlayers = result.players ? result.players.length : 0;
     const maxPlayerCount = result.maxPlayers || 0;
     playerCount.set(currentPlayers);
     maxPlayers.set(maxPlayerCount);
-    
+
     // Server info
     serverInfo.set(
       {
@@ -104,10 +102,10 @@ async function queryGameServer() {
       },
       1
     );
-    
+
     // Clear previous player info
     playerInfo.reset();
-    
+
     // Player info
     if (result.players && result.players.length > 0) {
       result.players.forEach(player => {
@@ -115,21 +113,18 @@ async function queryGameServer() {
         playerInfo.set({ player_name: playerName }, 1);
       });
     }
-    
+
     lastQueryResult = result;
     lastQueryError = null;
-    
-    console.log(`Query successful: ${currentPlayers}/${maxPlayerCount} players, Map: ${result.map || 'Unknown'}`);
-    
   } catch (error) {
     console.error('Error querying game server:', error.message);
-    
+
     // Mark server as offline
     serverOnline.set(0);
-    
+
     const duration = (Date.now() - startTime) / 1000;
     queryDuration.set(duration);
-    
+
     lastQueryError = error.message;
   } finally {
     isQuerying = false;
@@ -146,7 +141,7 @@ app.get('/metrics', async (req, res) => {
       lastQueryTime = now; // Set immediately to prevent race condition
       await queryGameServer();
     }
-    
+
     res.set('Content-Type', register.contentType);
     res.end(await register.metrics());
   } catch (error) {

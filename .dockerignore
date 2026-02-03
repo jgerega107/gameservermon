@@ -4,7 +4,5 @@ npm-debug.log
 .gitignore
 README.md
 docker-compose.yml
-kubernetes-example.yml
-SECURITY.md
 .env
 *.md
