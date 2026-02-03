@@ -943,7 +943,36 @@
           "type": "prometheus",
           "uid": "${datasource}"
         },
-        "definition": "label_values(gameserver_online{host=~\"$host\"}, port)",
+        "definition": "label_values(gameserver_info{host=~\"$host\"}, server_name)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Server Name",
+        "multi": false,
+        "name": "server_name",
+        "options": [],
+        "query": {
+          "qryType": 1,
+          "query": "label_values(gameserver_info{host=~\"$host\"}, server_name)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(gameserver_info{host=~\"$host\", server_name=~\"$server_name\"}, port)",
         "hide": 0,
         "includeAll": true,
         "label": "Port",
@@ -952,7 +981,7 @@
         "options": [],
         "query": {
           "qryType": 1,
-          "query": "label_values(gameserver_online{host=~\"$host\"}, port)",
+          "query": "label_values(gameserver_info{host=~\"$host\", server_name=~\"$server_name\"}, port)",
           "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
         "refresh": 1,
