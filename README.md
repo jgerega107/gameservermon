@@ -2,19 +2,13 @@
 
 Game server monitor that utilizes node-gamedig to provide valuable Prometheus metrics about a running game server.
 
-## Overview
-
-This is a lightweight Node.js application designed to run as a container sidecar that monitors game servers and exposes Prometheus metrics. It uses the [gamedig](https://github.com/gamedig/node-gamedig) library to query game servers and provides detailed metrics about server status, player information, and performance.
-
 ## Features
 
 - **Server Status Monitoring**: Track whether your game server is online or offline
 - **Player Metrics**: Monitor current player count, maximum players, and individual player names
 - **Server Information**: Expose server name, map, game type, and version
-- **Query Performance**: Track query response times
-- **Prometheus Integration**: Standard Prometheus metrics endpoint for easy scraping
-- **Health Check Endpoint**: Simple health check for container orchestration
-- **Multi-Game Support**: Supports all game types supported by node-gamedig (Minecraft, CS:GO, ARK, Rust, etc.)
+- **Health Check Endpoint**: Simple health check
+- **Multi-Game Support**: Supports all game types supported by node-gamedig
 
 ## Prometheus Metrics
 
@@ -33,31 +27,20 @@ Additionally, default Node.js metrics are included (memory usage, CPU, etc.)
 
 Configuration is done via environment variables:
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `GAME_TYPE` | Type of game server (see [supported games](https://github.com/gamedig/node-gamedig#games-list)) | `minecraft` |
-| `GAME_HOST` | Hostname or IP of the game server | `localhost` |
-| `GAME_PORT` | Port of the game server | `25565` |
-| `HTTP_PORT` | Port for the HTTP metrics server | `9090` |
+| Variable | Description | Required | Default |
+|----------|-------------|----------|---------|
+| `GAME_TYPE` | Type of game server (see [supported games](https://github.com/gamedig/node-gamedig#games-list)) | Yes | - |
+| `GAME_HOST` | Hostname or IP of the game server | Yes | - |
+| `GAME_PORT` | Port of the game server | Yes | - |
+| `HTTP_PORT` | Port for the HTTP metrics server | No | `9090` |
 
 ## Usage
 
 ### Running Locally
 
-1. Install dependencies:
-```bash
-npm install
-```
+1. Run the compose project locally. `docker compose up -d --build`
 
-2. Set environment variables and run:
-```bash
-export GAME_TYPE=minecraft
-export GAME_HOST=your-server.com
-export GAME_PORT=25565
-npm start
-```
-
-3. Access metrics at `http://localhost:9090/metrics`
+2. Access metrics at `http://localhost:9090/metrics`
 
 ### Running with Docker
 
@@ -98,13 +81,9 @@ scrape_configs:
 This monitor supports all games that node-gamedig supports. Popular examples include:
 
 - Minecraft (Java & Bedrock)
-- Counter-Strike: Global Offensive
-- ARK: Survival Evolved
-- Rust
-- Team Fortress 2
-- Valheim
-- 7 Days to Die
-- And many more...
+- Counter-Strike 2
+- Team Fortress 2 (or any Source Engine game)
+And more
 
 See the [full list of supported games](https://github.com/gamedig/node-gamedig#games-list).
 
@@ -135,7 +114,3 @@ The application is built with:
 - **Express.js** - HTTP server
 - **prom-client** - Prometheus metrics library
 - **gamedig** - Game server query library
-
-## License
-
-MIT
