@@ -1,0 +1,23 @@
+{
+  "name": "gameservermon",
+  "version": "1.0.0",
+  "description": "Game server monitor that utilizes node-gamedig to provide valuable Prometheus metrics about a running game server.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "game-server",
+    "monitoring",
+    "prometheus",
+    "gamedig"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "gamedig": "^5.3.2",
+    "express": "^4.18.2",
+    "prom-client": "^15.1.0"
+  }
+}
