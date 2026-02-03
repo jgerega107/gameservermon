@@ -181,7 +181,7 @@ gameserver_player_info
 The application is built with:
 - **Express.js** - HTTP server
 - **prom-client** - Prometheus metrics library
-- **@gamedig/node-gamedig** - Game server query library
+- **gamedig** - Game server query library
 
 ## License
 

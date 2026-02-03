@@ -1,0 +1,10 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+README.md
+docker-compose.yml
+kubernetes-example.yml
+SECURITY.md
+.env
+*.md
