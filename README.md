@@ -38,7 +38,6 @@ Configuration is done via environment variables:
 | `GAME_TYPE` | Type of game server (see [supported games](https://github.com/gamedig/node-gamedig#games-list)) | `minecraft` |
 | `GAME_HOST` | Hostname or IP of the game server | `localhost` |
 | `GAME_PORT` | Port of the game server | `25565` |
-| `SCRAPE_INTERVAL` | How often to query the server (in milliseconds) | `30000` (30s) |
 | `HTTP_PORT` | Port for the HTTP metrics server | `9090` |
 
 ## Usage
@@ -77,43 +76,6 @@ docker run -d \
   gameservermon
 ```
 
-### Running as a Kubernetes Sidecar
-
-Example pod configuration with a game server and monitoring sidecar:
-
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: minecraft-server
-  labels:
-    app: minecraft
-spec:
-  containers:
-  - name: minecraft
-    image: itzg/minecraft-server
-    ports:
-    - containerPort: 25565
-    env:
-    - name: EULA
-      value: "TRUE"
-  
-  - name: monitor
-    image: gameservermon:latest
-    ports:
-    - containerPort: 9090
-      name: metrics
-    env:
-    - name: GAME_TYPE
-      value: "minecraft"
-    - name: GAME_HOST
-      value: "localhost"
-    - name: GAME_PORT
-      value: "25565"
-    - name: SCRAPE_INTERVAL
-      value: "30000"
-```
-
 ### Prometheus Configuration
 
 Add the following to your Prometheus scrape configuration:
@@ -123,15 +85,6 @@ scrape_configs:
   - job_name: 'gameservers'
     static_configs:
       - targets: ['gameserver-monitor:9090']
-```
-
-Or use Kubernetes service discovery with pod annotations:
-
-```yaml
-annotations:
-  prometheus.io/scrape: "true"
-  prometheus.io/port: "9090"
-  prometheus.io/path: "/metrics"
 ```
 
 ## Endpoints

@@ -111,76 +111,6 @@ gameserver_player_info{player_name="Player4"} 1
 gameserver_player_info{player_name="Player5"} 1
 ```
 
-## Kubernetes Deployment Example
-
-### Deploy as a Sidecar
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: game-server
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: game-server
-  template:
-    metadata:
-      labels:
-        app: game-server
-      annotations:
-        prometheus.io/scrape: "true"
-        prometheus.io/port: "9090"
-        prometheus.io/path: "/metrics"
-    spec:
-      containers:
-      # Main game server
-      - name: minecraft
-        image: itzg/minecraft-server
-        env:
-        - name: EULA
-          value: "TRUE"
-        ports:
-        - containerPort: 25565
-          name: minecraft
-      
-      # Monitoring sidecar
-      - name: monitor
-        image: gameservermon:latest
-        env:
-        - name: GAME_TYPE
-          value: "minecraft"
-        - name: GAME_HOST
-          value: "localhost"
-        - name: GAME_PORT
-          value: "25565"
-        - name: SCRAPE_INTERVAL
-          value: "30000"
-        ports:
-        - containerPort: 9090
-          name: metrics
-```
-
-### Service for Prometheus Discovery
-
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: game-server-metrics
-  labels:
-    app: game-server
-spec:
-  type: ClusterIP
-  ports:
-  - port: 9090
-    targetPort: 9090
-    name: metrics
-  selector:
-    app: game-server
-```
-
 ## Prometheus Configuration
 
 Add this to your Prometheus configuration:
@@ -193,28 +123,6 @@ scrape_configs:
       - targets: ['localhost:9090']
         labels:
           service: 'minecraft-server'
-```
-
-Or use Kubernetes service discovery:
-
-```yaml
-scrape_configs:
-  - job_name: 'kubernetes-pods'
-    kubernetes_sd_configs:
-      - role: pod
-    relabel_configs:
-      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
-        action: keep
-        regex: true
-      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
-        action: replace
-        target_label: __metrics_path__
-        regex: (.+)
-      - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
-        action: replace
-        regex: ([^:]+)(?::\d+)?;(\d+)
-        replacement: $1:$2
-        target_label: __address__
 ```
 
 ## Grafana Dashboard Queries
@@ -263,4 +171,3 @@ gameserver_player_info
 ### High query duration
 - Game server may be overloaded
 - Network latency between monitor and game server
-- Consider increasing SCRAPE_INTERVAL to reduce load

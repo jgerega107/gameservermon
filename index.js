@@ -6,7 +6,6 @@ const { GameDig } = require('gamedig');
 const GAME_TYPE = process.env.GAME_TYPE || 'minecraft';
 const GAME_HOST = process.env.GAME_HOST || 'localhost';
 const GAME_PORT = process.env.GAME_PORT ? parseInt(process.env.GAME_PORT) : 25565;
-const SCRAPE_INTERVAL = process.env.SCRAPE_INTERVAL ? parseInt(process.env.SCRAPE_INTERVAL) : 30000; // 30 seconds
 const HTTP_PORT = process.env.HTTP_PORT ? parseInt(process.env.HTTP_PORT) : 9090;
 
 // Create Express app
@@ -129,6 +128,9 @@ async function queryGameServer() {
 // Prometheus metrics endpoint
 app.get('/metrics', async (req, res) => {
   try {
+    // Query the game server on-demand when metrics are requested
+    await queryGameServer();
+    
     res.set('Content-Type', register.contentType);
     res.end(await register.metrics());
   } catch (error) {
@@ -143,8 +145,7 @@ app.get('/health', (req, res) => {
     config: {
       gameType: GAME_TYPE,
       gameHost: GAME_HOST,
-      gamePort: GAME_PORT,
-      scrapeInterval: SCRAPE_INTERVAL
+      gamePort: GAME_PORT
     },
     lastQuery: lastQueryResult ? {
       name: lastQueryResult.name,
@@ -173,7 +174,6 @@ app.get('/', (req, res) => {
           <li>Game Type: ${GAME_TYPE}</li>
           <li>Game Host: ${GAME_HOST}</li>
           <li>Game Port: ${GAME_PORT}</li>
-          <li>Scrape Interval: ${SCRAPE_INTERVAL}ms</li>
           <li>HTTP Port: ${HTTP_PORT}</li>
         </ul>
       </body>
@@ -185,12 +185,5 @@ app.get('/', (req, res) => {
 app.listen(HTTP_PORT, () => {
   console.log(`Game Server Monitor listening on port ${HTTP_PORT}`);
   console.log(`Monitoring ${GAME_TYPE} server at ${GAME_HOST}:${GAME_PORT}`);
-  console.log(`Scrape interval: ${SCRAPE_INTERVAL}ms`);
   console.log(`Metrics available at http://localhost:${HTTP_PORT}/metrics`);
-  
-  // Perform initial query
-  queryGameServer();
-  
-  // Set up periodic querying
-  setInterval(queryGameServer, SCRAPE_INTERVAL);
 });

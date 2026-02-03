@@ -1,4 +1,4 @@
-FROM node:18-alpine
+FROM node:lts-alpine
 
 # Create app user
 RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
@@ -29,7 +29,6 @@ EXPOSE 9090
 ENV GAME_TYPE=minecraft
 ENV GAME_HOST=localhost
 ENV GAME_PORT=25565
-ENV SCRAPE_INTERVAL=30000
 ENV HTTP_PORT=9090
 
 # Run the application

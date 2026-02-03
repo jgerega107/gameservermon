@@ -21,7 +21,6 @@ services:
       GAME_TYPE: "minecraft"
       GAME_HOST: "minecraft"
       GAME_PORT: "25565"
-      SCRAPE_INTERVAL: "30000"
       HTTP_PORT: "9090"
     ports:
       - "9090:9090"
