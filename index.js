@@ -3,9 +3,22 @@ const promClient = require('prom-client');
 const { GameDig } = require('gamedig');
 
 // Configuration from environment variables
-const GAME_TYPE = process.env.GAME_TYPE || 'minecraft';
-const GAME_HOST = process.env.GAME_HOST || 'localhost';
-const GAME_PORT = process.env.GAME_PORT ? parseInt(process.env.GAME_PORT) : 25565;
+if (!process.env.GAME_TYPE) {
+  console.error('Error: GAME_TYPE environment variable is required');
+  process.exit(1);
+}
+if (!process.env.GAME_HOST) {
+  console.error('Error: GAME_HOST environment variable is required');
+  process.exit(1);
+}
+if (!process.env.GAME_PORT) {
+  console.error('Error: GAME_PORT environment variable is required');
+  process.exit(1);
+}
+
+const GAME_TYPE = process.env.GAME_TYPE;
+const GAME_HOST = process.env.GAME_HOST;
+const GAME_PORT = parseInt(process.env.GAME_PORT);
 const HTTP_PORT = process.env.HTTP_PORT ? parseInt(process.env.HTTP_PORT) : 9090;
 
 // Create Express app
