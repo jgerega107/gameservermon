@@ -22,11 +22,5 @@ USER node
 # Expose the metrics port
 EXPOSE 9090
 
-# Set default environment variables
-ENV GAME_TYPE=minecraft
-ENV GAME_HOST=localhost
-ENV GAME_PORT=25565
-ENV HTTP_PORT=9090
-
 # Run the application
 CMD ["node", "index.js"]

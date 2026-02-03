@@ -100,8 +100,8 @@ async function queryGameServer() {
     queryDuration.set(duration);
 
     // Player counts
-    const currentPlayers = result.players ? result.players.length : 0;
-    const maxPlayerCount = result.maxPlayers || 0;
+    const currentPlayers = result.numplayers || 0;
+    const maxPlayerCount = result.maxplayers || 0;
     playerCount.set(currentPlayers);
     maxPlayers.set(maxPlayerCount);
 
@@ -174,8 +174,8 @@ app.get('/health', (req, res) => {
     lastQuery: lastQueryResult ? {
       name: lastQueryResult.name,
       map: lastQueryResult.map,
-      players: lastQueryResult.players ? lastQueryResult.players.length : 0,
-      maxPlayers: lastQueryResult.maxPlayers
+      players: lastQueryResult.numplayers || 0,
+      maxPlayers: lastQueryResult.maxplayers
     } : null,
     lastError: lastQueryError
   });
