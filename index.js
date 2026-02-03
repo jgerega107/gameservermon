@@ -143,8 +143,8 @@ app.get('/metrics', async (req, res) => {
     // Use cached result if query was done recently (within TTL)
     const now = Date.now();
     if (now - lastQueryTime > QUERY_CACHE_TTL) {
+      lastQueryTime = now; // Set immediately to prevent race condition
       await queryGameServer();
-      lastQueryTime = now;
     }
     
     res.set('Content-Type', register.contentType);
