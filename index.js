@@ -59,42 +59,49 @@ const register = new promClient.Registry();
 // Add default metrics (process, nodejs metrics)
 promClient.collectDefaultMetrics({ register });
 
+// Common labels for all game server metrics
+const commonLabels = { host: GAME_HOST, port: GAME_PORT };
+
 // Define custom metrics
 const serverOnline = new promClient.Gauge({
   name: 'gameserver_online',
   help: 'Whether the game server is online (1) or offline (0)',
+  labelNames: ['host', 'port'],
   registers: [register]
 });
 
 const playerCount = new promClient.Gauge({
   name: 'gameserver_players_current',
   help: 'Current number of players on the game server',
+  labelNames: ['host', 'port'],
   registers: [register]
 });
 
 const maxPlayers = new promClient.Gauge({
   name: 'gameserver_players_max',
   help: 'Maximum number of players allowed on the game server',
+  labelNames: ['host', 'port'],
   registers: [register]
 });
 
 const queryDuration = new promClient.Gauge({
   name: 'gameserver_query_duration_seconds',
   help: 'Time taken to query the game server in seconds',
+  labelNames: ['host', 'port'],
   registers: [register]
 });
 
 const serverInfo = new promClient.Gauge({
   name: 'gameserver_info',
   help: 'Information about the game server',
-  labelNames: ['game_type', 'server_name', 'map', 'version'],
+  labelNames: ['host', 'port', 'game_type', 'server_name', 'map', 'version'],
   registers: [register]
 });
 
 const playerInfo = new promClient.Gauge({
   name: 'gameserver_player_info',
   help: 'Information about players on the server',
-  labelNames: ['player_name'],
+  labelNames: ['host', 'port', 'player_name'],
   registers: [register]
 });
 
@@ -125,18 +132,19 @@ async function queryGameServer() {
     const duration = (Date.now() - startTime) / 1000;
 
     // Update metrics
-    serverOnline.set(1);
-    queryDuration.set(duration);
+    serverOnline.set(commonLabels, 1);
+    queryDuration.set(commonLabels, duration);
 
     // Player counts
     const currentPlayers = result.numplayers || 0;
     const maxPlayerCount = result.maxplayers || 0;
-    playerCount.set(currentPlayers);
-    maxPlayers.set(maxPlayerCount);
+    playerCount.set(commonLabels, currentPlayers);
+    maxPlayers.set(commonLabels, maxPlayerCount);
 
     // Server info
     serverInfo.set(
       {
+        ...commonLabels,
         game_type: GAME_TYPE,
         server_name: result.name || 'Unknown',
         map: result.map || 'Unknown',
@@ -152,7 +160,7 @@ async function queryGameServer() {
     if (result.players && result.players.length > 0) {
       result.players.forEach(player => {
         const playerName = player.name || 'Unknown';
-        playerInfo.set({ player_name: playerName }, 1);
+        playerInfo.set({ ...commonLabels, player_name: playerName }, 1);
       });
     }
 
@@ -162,10 +170,16 @@ async function queryGameServer() {
     console.error('Error querying game server:', error.message);
 
     // Mark server as offline
-    serverOnline.set(0);
+    serverOnline.set(commonLabels, 0);
 
     const duration = (Date.now() - startTime) / 1000;
-    queryDuration.set(duration);
+    queryDuration.set(commonLabels, duration);
+
+    // Remove player count metrics - don't show stale data when query fails
+    playerCount.remove(commonLabels);
+    maxPlayers.remove(commonLabels);
+    playerInfo.reset();
+    serverInfo.reset();
 
     lastQueryError = error.message;
   } finally {
@@ -248,7 +262,7 @@ const server = app.listen(HTTP_PORT, () => {
 // Graceful shutdown handler
 function gracefulShutdown(signal) {
   console.log(`\nReceived ${signal}. Shutting down gracefully...`);
-  
+
   // Force shutdown after 10 seconds if graceful shutdown fails
   const forceShutdownTimeout = setTimeout(() => {
     console.error('Forced shutdown after timeout.');
