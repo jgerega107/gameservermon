@@ -1,25 +1,54 @@
 const express = require('express');
 const promClient = require('prom-client');
-const { GameDig } = require('gamedig');
+const { GameDig, games } = require('gamedig');
 
-// Configuration from environment variables
-if (!process.env.GAME_TYPE) {
-  console.error('Error: GAME_TYPE environment variable is required');
-  process.exit(1);
+// Get list of valid game types from gamedig
+const validGameTypes = Object.keys(games);
+
+// Configuration from environment variables with sanitization
+function getRequiredEnvVar(name) {
+  const value = process.env[name];
+  if (!value || value.trim() === '') {
+    console.error(`Error: ${name} environment variable is required`);
+    process.exit(1);
+  }
+  return value.trim();
 }
-if (!process.env.GAME_HOST) {
-  console.error('Error: GAME_HOST environment variable is required');
-  process.exit(1);
+
+function getOptionalEnvVar(name, defaultValue) {
+  const value = process.env[name];
+  if (!value || value.trim() === '') {
+    return defaultValue;
+  }
+  return value.trim();
 }
-if (!process.env.GAME_PORT) {
-  console.error('Error: GAME_PORT environment variable is required');
+
+// Validate required environment variables
+const GAME_TYPE = getRequiredEnvVar('GAME_TYPE');
+const GAME_HOST = getRequiredEnvVar('GAME_HOST');
+const GAME_PORT_STR = getRequiredEnvVar('GAME_PORT');
+const HTTP_PORT_STR = getOptionalEnvVar('HTTP_PORT', '9090');
+
+// Validate GAME_TYPE is a valid gamedig game type
+if (!validGameTypes.includes(GAME_TYPE)) {
+  console.error(`Error: Invalid GAME_TYPE '${GAME_TYPE}'.`);
+  console.error(`Valid game types include: ${validGameTypes.slice(0, 20).join(', ')}...`);
+  console.error(`See https://github.com/gamedig/node-gamedig#games-list for the full list of supported games.`);
   process.exit(1);
 }
 
-const GAME_TYPE = process.env.GAME_TYPE;
-const GAME_HOST = process.env.GAME_HOST;
-const GAME_PORT = parseInt(process.env.GAME_PORT);
-const HTTP_PORT = process.env.HTTP_PORT ? parseInt(process.env.HTTP_PORT) : 9090;
+// Validate and parse numeric environment variables
+const GAME_PORT = parseInt(GAME_PORT_STR, 10);
+if (isNaN(GAME_PORT) || GAME_PORT < 1 || GAME_PORT > 65535) {
+  console.error(`Error: GAME_PORT must be a valid port number (1-65535), got '${GAME_PORT_STR}'`);
+  process.exit(1);
+}
+
+const HTTP_PORT = parseInt(HTTP_PORT_STR, 10);
+if (isNaN(HTTP_PORT) || HTTP_PORT < 1 || HTTP_PORT > 65535) {
+  console.error(`Error: HTTP_PORT must be a valid port number (1-65535), got '${HTTP_PORT_STR}'`);
+  process.exit(1);
+}
 
 // Create Express app
 const app = express();
@@ -164,8 +193,12 @@ app.get('/metrics', async (req, res) => {
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({
-    status: 'ok',
+  const isHealthy = lastQueryError === null && lastQueryResult !== null;
+  const status = isHealthy ? 'ok' : 'error';
+  const httpStatus = isHealthy ? 200 : 503;
+
+  res.status(httpStatus).json({
+    status: status,
     config: {
       gameType: GAME_TYPE,
       gameHost: GAME_HOST,
@@ -206,8 +239,33 @@ app.get('/', (req, res) => {
 });
 
 // Start the server
-app.listen(HTTP_PORT, () => {
+const server = app.listen(HTTP_PORT, () => {
   console.log(`Game Server Monitor listening on port ${HTTP_PORT}`);
   console.log(`Monitoring ${GAME_TYPE} server at ${GAME_HOST}:${GAME_PORT}`);
   console.log(`Metrics available at http://localhost:${HTTP_PORT}/metrics`);
 });
+
+// Graceful shutdown handler
+function gracefulShutdown(signal) {
+  console.log(`\nReceived ${signal}. Shutting down gracefully...`);
+  
+  server.close((err) => {
+    if (err) {
+      console.error('Error during shutdown:', err);
+      process.exit(1);
+    }
+    console.log('HTTP server closed.');
+    console.log('Shutdown complete.');
+    process.exit(0);
+  });
+
+  // Force shutdown after 10 seconds if graceful shutdown fails
+  setTimeout(() => {
+    console.error('Forced shutdown after timeout.');
+    process.exit(1);
+  }, 10000);
+}
+
+// Handle shutdown signals
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
