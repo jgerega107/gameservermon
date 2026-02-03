@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  # Example Minecraft server
+  minecraft:
+    image: itzg/minecraft-server
+    environment:
+      EULA: "TRUE"
+      ONLINE_MODE: "FALSE"
+      TYPE: "PAPER"
+      VERSION: "1.20.1"
+    ports:
+      - "25565:25565"
+    volumes:
+      - minecraft_data:/data
+  
+  # Game server monitor sidecar
+  monitor:
+    build: .
+    environment:
+      GAME_TYPE: "minecraft"
+      GAME_HOST: "minecraft"
+      GAME_PORT: "25565"
+      SCRAPE_INTERVAL: "30000"
+      HTTP_PORT: "9090"
+    ports:
+      - "9090:9090"
+    depends_on:
+      - minecraft
+
+volumes:
+  minecraft_data:
