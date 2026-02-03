@@ -249,7 +249,14 @@ const server = app.listen(HTTP_PORT, () => {
 function gracefulShutdown(signal) {
   console.log(`\nReceived ${signal}. Shutting down gracefully...`);
   
+  // Force shutdown after 10 seconds if graceful shutdown fails
+  const forceShutdownTimeout = setTimeout(() => {
+    console.error('Forced shutdown after timeout.');
+    process.exit(1);
+  }, 10000);
+
   server.close((err) => {
+    clearTimeout(forceShutdownTimeout);
     if (err) {
       console.error('Error during shutdown:', err);
       process.exit(1);
@@ -258,12 +265,6 @@ function gracefulShutdown(signal) {
     console.log('Shutdown complete.');
     process.exit(0);
   });
-
-  // Force shutdown after 10 seconds if graceful shutdown fails
-  setTimeout(() => {
-    console.error('Forced shutdown after timeout.');
-    process.exit(1);
-  }, 10000);
 }
 
 // Handle shutdown signals
