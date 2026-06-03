@@ -1,6 +1,6 @@
 # gameservermon
 
-Game server monitor that utilizes [node-gamedig](https://github.com/gamedig/node-gamedig) to provide valuable Prometheus metrics about a running game server.
+Game server monitor that utilizes [node-gamedig](https://github.com/gamedig/node-gamedig) to provide Prometheus metrics about a running game server.
 
 ## Disclaimer
 This tool was created with the assistance of AI tools, specifically Github Copilot.
