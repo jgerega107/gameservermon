@@ -16,7 +16,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "gamedig": "^5.3.2",
+    "gamedig": "^5.3.3",
     "express": "^5.2.1",
     "prom-client": "^15.1.0"
   }
