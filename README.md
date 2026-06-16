@@ -90,6 +90,27 @@ And more
 
 See the [full list of supported games](https://github.com/gamedig/node-gamedig#games-list).
 
+## Grafana Dashboard
+
+A pre-built Grafana dashboard is included in [`grafana-dashboard.json`](./grafana-dashboard.json). This dashboard provides:
+
+- **Server Status**: Visual indicator showing if the server is online or offline
+- **Player Statistics**: Current player count, max players, and player capacity gauge
+- **Player Count Over Time**: Historical graph of player counts
+- **Query Duration**: Monitor the health of your monitoring setup
+- **Server Information**: Table showing game type, server name, map, and version
+- **Current Players List**: Table of all currently connected players
+- **Uptime History**: Timeline showing server availability
+
+### Importing the Dashboard
+
+1. In Grafana, go to **Dashboards** → **Import**
+2. Upload the `grafana-dashboard.json` file or paste its contents
+3. Select your Prometheus data source
+4. Click **Import**
+
+The dashboard includes template variables for filtering by host and port, allowing you to monitor multiple game servers from a single dashboard.
+
 ## Example Queries
 
 Some useful Prometheus queries:
