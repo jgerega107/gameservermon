@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --test",
+    "check": "node --check index.js"
   },
   "keywords": [
     "game-server",
@@ -15,9 +16,12 @@
   ],
   "author": "",
   "license": "MIT",
+  "engines": {
+    "node": "^24 || >=26"
+  },
   "dependencies": {
-    "gamedig": "^5.3.2",
+    "@prometheus-io/client": "^0.16.1",
     "express": "^5.2.1",
-    "prom-client": "^15.1.0"
+    "gamedig": "^5.3.3"
   }
 }
