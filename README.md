@@ -11,6 +11,7 @@ This tool was created with the assistance of AI tools, specifically Github Copil
 - **Player Metrics**: Monitor current player count, maximum players, and individual player names
 - **Server Information**: Expose server name, map, game type, and version
 - **Health Check Endpoint**: Simple health check
+- **Container Liveness**: Health checks keep the exporter healthy even when the game server is offline
 - **Multi-Game Support**: Supports all game types supported by node-gamedig
 
 ## Prometheus Metrics
@@ -40,6 +41,15 @@ Configuration is done via environment variables:
 ## Usage
 
 ### Running Locally
+
+Requires Node.js 24 LTS when running outside Docker.
+
+```bash
+npm ci
+GAME_TYPE=minecraft GAME_HOST=localhost GAME_PORT=25565 npm start
+```
+
+To run the example Minecraft server and monitor together:
 
 1. Run the compose project locally. `docker compose up -d --build`
 
@@ -78,6 +88,22 @@ scrape_configs:
 - `GET /` - Basic information page
 - `GET /metrics` - Prometheus metrics endpoint
 - `GET /health` - Health check endpoint with current server status
+- `GET /live` - Exporter liveness endpoint, independent of game server availability
+
+Game queries run on demand during `/metrics` scrapes. Concurrent scrapes wait for the same query, and results (including failures) are cached for five seconds after the query completes. `/health` returns `503` before the first scrape and after a failed query; `/live` remains `200` while the exporter is running.
+
+## Automated Maintenance
+
+Dependabot checks npm, Docker, Docker Compose, and GitHub Actions dependencies every Monday at 06:00 America/New_York. npm patch and minor upgrades are grouped; major upgrades are proposed separately. Security fixes are grouped separately and require Dependabot alerts and security updates to be enabled in the repository's **Settings → Advanced Security** page.
+
+The Docker workflow tests and audits dependencies before publishing signed images to `ghcr.io/jgerega107/gameservermon`. It runs on changes to `main`, published releases, manual dispatch, and daily at **06:23 UTC** (02:23 EDT / 01:23 EST). Daily builds pull the current Node.js 24 Alpine base image and rebuild without layer caching.
+
+- `latest` tracks successful builds from `main` and stable releases.
+- `nightly` tracks the most recent scheduled build.
+- Release tags, semantic version tags, and full Git commit tags are also published.
+- Pull requests run tests, an npm vulnerability audit, and a Docker build without publishing or receiving registry/signing permissions.
+
+Scheduled builds and the expanded Dependabot configuration take effect when these workflow files are on the default branch. GitHub can pause Dependabot after prolonged inactivity and scheduled workflows in inactive public repositories; check the repository's update and Actions pages if automation stops.
 
 ## Supported Games
 
@@ -115,5 +141,13 @@ gameserver_player_info
 
 The application is built with:
 - **Express.js** - HTTP server
-- **prom-client** - Prometheus metrics library
+- [**@prometheus-io/client**](https://github.com/prometheus/client_js) - Maintained Prometheus metrics library (formerly `prom-client`)
 - [**node-gamedig**](https://github.com/gamedig/node-gamedig) - Game server query library
+
+```bash
+npm run check
+npm test
+npm audit --omit=dev
+```
+
+Tests use Node.js's built-in test runner and a local HTTP server with stubbed game queries, so no live game server is required.
