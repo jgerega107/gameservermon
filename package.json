@@ -23,5 +23,10 @@
     "@prometheus-io/client": "^0.16.1",
     "express": "^5.2.1",
     "gamedig": "^5.3.3"
+  },
+  "overrides": {
+    "gamedig": {
+      "fast-xml-parser": "^5.12.0"
+    }
   }
 }
